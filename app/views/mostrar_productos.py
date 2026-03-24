@@ -20,18 +20,37 @@ def products_view(page:ft.Page) -> ft.Control:
 
     #Se definen las filas de la tabla
     #Cada data.append agrega
-    data=[]
-    data.append(
-        ft.DataRow(
-            cells=[
-                ft.DataCell(ft.Text("nombre1...")),
-                ft.DataCell(ft.Text("cantidad1...")),
-                ft.DataCell(ft.Text("ingreso1...")),
-                ft.DataCell(ft.Text("min1...")),
-                ft.DataCell(ft.Text("max1...")),
-            ]
-        )
-    )
+    # Se define la lista de datos vacía
+    data = []
+    try:
+        # Mandamos a llamar a tu API
+        respuesta_api = list_products()
+        
+        # Extraemos la lista de productos que viene guardada dentro de 'items'
+        productos_reales = respuesta_api.get("items", [])
+        
+        # Actualizamos el texto usando el 'total' que ya te manda tu API
+        total_text.value = f"Total de productos: {respuesta_api.get('total', 0)}"
+
+        # Hacemos el ciclo ahora sí sobre los productos reales
+        for prod in productos_reales:
+            data.append(
+                ft.DataRow(
+                    cells=[
+                        ft.DataCell(ft.Text(str(prod.get("name", "")))),
+                        ft.DataCell(ft.Text(str(prod.get("quantity", "")))),
+                        ft.DataCell(ft.Text(str(prod.get("ingreso_date", "")))),
+                        ft.DataCell(ft.Text(str(prod.get("min_stock", "")))),
+                        ft.DataCell(ft.Text(str(prod.get("max_stock", "")))),
+                    ]
+                )
+            )
+                
+    except Exception as e:
+        total_text.value = f"Error al cargar productos: {e}"
+
+
+
 
     #Se crea la tabla con los encabezados(columnas) y los datos de prueba(data)
     tabla=ft.DataTable(
@@ -44,4 +63,22 @@ def products_view(page:ft.Page) -> ft.Control:
         data_row_min_height=48
     )
 
-    return tabla
+    # return tabla
+
+    # Regresa la tabla con los datos
+    # return tabla
+
+    # Se prepara un sistema de columnas para mostrar tanto el total de registros y
+    # la tabla y con un mejor formato
+    # Cuando se necesita el scroll también se muestra
+    contenido = ft.Column(
+        # Se crea un espacio entra cada elemento
+        spacing=30,
+        # Cuando no caben los elementos se genera el scroll
+        scroll=ft.ScrollMode.AUTO,
+        # Se establecen tanto el total como la tabla para mostrar
+        controls=[total_text, ft.Container(content=tabla)]
+    )
+
+    # Se muestra esa columna
+    return contenido
