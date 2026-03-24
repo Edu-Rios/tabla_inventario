@@ -12,11 +12,11 @@ class Colors:
     WHITE = "#FFFFFF"
     BLACK = "#000000"
 
-class Textos_estilos: # <-- Le cambiamos el nombre aquí
+class Textos_estilos: 
     H1=ft.TextStyle(size=26, height=1.2, weight=ft.FontWeight.W_300, font_family="sans-serif", color=Colors.TEXT)
     H2=ft.TextStyle(size=20, height=1.2, weight=ft.FontWeight.W_300, font_family="sans-serif", color=Colors.TEXT)
     H3=ft.TextStyle(size=14, height=1.2, weight=ft.FontWeight.W_300, font_family="sans-serif", color=Colors.TEXT)
-    H4=ft.TextStyle(size=16, weight=ft.FontWeight.BOLD, color=Colors.TEXT) # <-- Agregamos el H4 que pide tu tabla
+    H4=ft.TextStyle(size=16, weight=ft.FontWeight.BOLD, color=Colors.TEXT) 
     text=ft.TextStyle(size=12, height=1.2, weight=ft.FontWeight.W_300, font_family="sans-serif", color=Colors.TEXT)
 
 class Inputs:
@@ -25,8 +25,8 @@ class Inputs:
         "focused_border_color": Colors.PRIMARY,
         "cursor_color": Colors.PRIMARY,
         "width": 500,
-        "text_style": Textos_estilos.text,  # <-- Actualizamos el nombre aquí también
-        "label_style": Textos_estilos.text, # <-- Y aquí
+        "text_style": Textos_estilos.text,  
+        "label_style": Textos_estilos.text, 
         "bgcolor": Colors.BG,
     }
 

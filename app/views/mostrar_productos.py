@@ -37,11 +37,11 @@ def products_view(page:ft.Page) -> ft.Control:
             data.append(
                 ft.DataRow(
                     cells=[
-                        ft.DataCell(ft.Text(str(prod.get("name", "")))),
-                        ft.DataCell(ft.Text(str(prod.get("quantity", "")))),
-                        ft.DataCell(ft.Text(str(prod.get("ingreso_date", "")))),
-                        ft.DataCell(ft.Text(str(prod.get("min_stock", "")))),
-                        ft.DataCell(ft.Text(str(prod.get("max_stock", "")))),
+                        ft.DataCell(ft.Text(str(prod.get("name", "")), style=Textos_estilos.text)),
+                        ft.DataCell(ft.Text(str(prod.get("quantity", "")), style=Textos_estilos.text)),
+                        ft.DataCell(ft.Text(str(prod.get("ingreso_date", "")), style=Textos_estilos.text)),
+                        ft.DataCell(ft.Text(str(prod.get("min_stock", "")), style=Textos_estilos.text)),
+                        ft.DataCell(ft.Text(str(prod.get("max_stock", "")), style=Textos_estilos.text)),
                     ]
                 )
             )
@@ -81,4 +81,8 @@ def products_view(page:ft.Page) -> ft.Control:
     )
 
     # Se muestra esa columna
-    return contenido
+    # return contenido
+    # Se crea una tarjeta con formato para mostrar a la columna
+    tarjeta = ft.Container(content=contenido, **Card.tarjeta)
+    
+    return tarjeta
