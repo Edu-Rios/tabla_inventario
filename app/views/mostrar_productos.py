@@ -85,4 +85,9 @@ def products_view(page:ft.Page) -> ft.Control:
     # Se crea una tarjeta con formato para mostrar a la columna
     tarjeta = ft.Container(content=contenido, **Card.tarjeta)
     
-    return tarjeta
+    # return tarjeta
+
+    # Se crea un contenedor para centrar a la tarjeta anterior
+    final = ft.Container(expand=True, alignment=ft.Alignment(0, -1), content=tarjeta)
+    
+    return final
