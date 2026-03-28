@@ -4,8 +4,36 @@ from app.services.transacciones_api_productos import list_products, get_product,
 from app.components.popup import show_popup, show_popup_auto_close, show_snackbar, confirm_dialog
 from app.components.error import ApiError, api_error_to_text
 from app.styles.estilos import Colors, Textos_estilos, Card
+from app.views.nuevo_editar import formulario_nuevo_editar_producto
 
 def products_view(page:ft.Page) -> ft.Control:
+
+    ############# Nuevo producto #############
+    #Esta función se ejecuta al hacer click en "Nuevo producto"
+    #lo que hace en primer lugar es abrir la ventana para captura de datos
+    ############# Nuevo producto #############
+    def inicio_nuevo_producto(_e):
+        # ¡Le quitamos el "async"! Ahora es una función normal
+        def crear_nuevo_producto(data: dict): 
+            print("3. Intentando crear en API:", data) # Esto saldrá en tu terminal
+            try:
+                create_product(data)
+                print("4. ¡Producto guardado con éxito en BD!") # Esto saldrá en tu terminal
+                show_snackbar(page, "Éxito", "Producto creado.", bgcolor=Colors.SUCCESS)
+                close() 
+            except ApiError as ex:
+                print("Error de API:", ex)
+                show_popup(page, "Error", api_error_to_text(ex))
+            except Exception as ex:
+                print("Error General:", ex)
+                show_snackbar(page, "Error", str(ex), bgcolor=Colors.DANGER)
+
+        dlg, open_, close = formulario_nuevo_editar_producto(page, on_submit=crear_nuevo_producto, initial=None)
+        open_()
+    ############# FIN nuevo producto #############
+    ############# FIN nuevo producto #############
+    btn_nuevo = ft.Button("Nuevo producto", icon=ft.Icons.ADD, on_click=inicio_nuevo_producto)
+    
     rows_data: list[dict[str, Any]]=[]
     total_items=0
     total_text = ft.Text("Total de productos: (cargando...)", style=Textos_estilos.H4)
@@ -77,7 +105,7 @@ def products_view(page:ft.Page) -> ft.Control:
         # Cuando no caben los elementos se genera el scroll
         scroll=ft.ScrollMode.AUTO,
         # Se establecen tanto el total como la tabla para mostrar
-        controls=[total_text, ft.Container(content=tabla)]
+        controls=[btn_nuevo, total_text, ft.Container(content=tabla)]
     )
 
     # Se muestra esa columna
