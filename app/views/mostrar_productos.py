@@ -31,7 +31,6 @@ def products_view(page: ft.Page) -> ft.Control:
         data_row_min_height=48
     )
 
-
     def actualizar_data(is_init: bool = False):
         try:
             respuesta_api = list_products(limit=100)
@@ -53,7 +52,8 @@ def products_view(page: ft.Page) -> ft.Control:
                                 ft.Row(
                                     controls=[
                                         ft.IconButton(icon=ft.Icons.EDIT, tooltip="Editar", on_click=lambda e, p=prod: inicio_editar_producto(p)),
-                                        # ft.IconButton(icon=ft.Icons.DELETE, tooltip="Borrar", on_click=lambda e, p=prod: inicio_borrar_producto(p))
+                                        # 👉 AQUÍ YA ESTÁ DESCOMENTADO EL BOTÓN DE BORRAR:
+                                        ft.IconButton(icon=ft.Icons.DELETE, tooltip="Borrar", on_click=lambda e, p=prod: inicio_borrar_producto(p))
                                     ]
                                 )
                             )
@@ -114,6 +114,25 @@ def products_view(page: ft.Page) -> ft.Control:
 
         dlg, open_, close = formulario_nuevo_editar_producto(page, on_submit=editar_producto, initial=p)
         open_()
+
+  
+    def borrar_producto(p: dict[str, Any]):
+        try:
+            print(f"Llamando delete_product con api para ID {p.get('id')}")
+            delete_product(p["id"])
+            show_snackbar(page, "Éxito", "Producto borrado.", bgcolor=Colors.SUCCESS)
+            actualizar_data() # Recarga la tabla automáticamente
+        except ApiError as ex:
+            print("ApiError en delete_product:", repr(ex))
+            show_popup(page, "Error", api_error_to_text(ex))
+        except Exception as ex:
+            print("Exception en delete_product:", repr(ex))
+            show_snackbar(page, "Error", str(ex), bgcolor=Colors.DANGER)
+
+    def inicio_borrar_producto(p: dict[str, Any]):
+        # Se ejecuta directamente, ya sin el "async" ni el "run_task"
+        borrar_producto(p)
+
 
     btn_nuevo = ft.Button("Nuevo producto", icon=ft.Icons.ADD, on_click=inicio_nuevo_producto)
     
