@@ -1,6 +1,7 @@
 # app/views/nuevo_editar.py
 import flet as ft
-from app.components.popup import show_popup
+from app.components.popup import show_popup, show_snackbar
+from app.styles.estilos import Colors
 
 def formulario_nuevo_editar_producto(page: ft.Page, on_submit, initial: dict | None = None):
     initial = initial or {}
@@ -16,11 +17,11 @@ def formulario_nuevo_editar_producto(page: ft.Page, on_submit, initial: dict | N
         dlg.open = False
         page.update()
 
-    # ¡Fíjate que ya no dice "async def", solo "def"!
     def save(e):
-        print("1. Botón guardar presionado") # Esto saldrá en tu terminal
+        print("1. Validando formulario...")
         if not name.value.strip():
-            show_popup(page, "Validación", "El nombre es obligatorio.")
+            print("ERROR DE VALIDACIÓN: El nombre está vacío")
+            show_snackbar(page, "Validación", "El nombre es obligatorio.", bgcolor=Colors.DANGER)
             return
 
         try:
@@ -31,15 +32,16 @@ def formulario_nuevo_editar_producto(page: ft.Page, on_submit, initial: dict | N
                 "min_stock": int(min_stock.value),
                 "max_stock": int(max_stock.value),
             }
-        except ValueError:
-            show_popup(page, "Validación", "Cantidad y stocks deben ser números enteros.")
+        except ValueError as exc:
+            print(f"ERROR DE VALIDACIÓN: Un valor numérico es inválido. Detalles: {exc}")
+            show_snackbar(page, "Validación", "Cantidad y stocks deben ser números enteros.", bgcolor=Colors.DANGER)
             return
 
-        print("2. Datos listos, enviando a la base de datos...") # Esto saldrá en tu terminal
+        print("2. Formulario correcto, enviando a procesar...")
+        # Ejecuta la función que se mandó desde mostrar_productos
         on_submit(data)
 
     btn_cancelar = ft.TextButton("Cancelar", on_click=lambda e: close())
-    # Le quitamos el run_task, ahora el botón llama a save directamente
     btn_guardar = ft.Button("Guardar", on_click=save)
 
     dlg = ft.AlertDialog(

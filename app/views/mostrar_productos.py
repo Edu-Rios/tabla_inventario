@@ -1,3 +1,4 @@
+# app/views/mostrar_productos.py
 import flet as ft
 from typing import Any
 from app.services.transacciones_api_productos import list_products, get_product, create_product, update_product, delete_product
@@ -6,84 +7,23 @@ from app.components.error import ApiError, api_error_to_text
 from app.styles.estilos import Colors, Textos_estilos, Card
 from app.views.nuevo_editar import formulario_nuevo_editar_producto
 
-def products_view(page:ft.Page) -> ft.Control:
+def products_view(page: ft.Page) -> ft.Control:
 
-    ############# Nuevo producto #############
-    #Esta función se ejecuta al hacer click en "Nuevo producto"
-    #lo que hace en primer lugar es abrir la ventana para captura de datos
-    ############# Nuevo producto #############
-    def inicio_nuevo_producto(_e):
-        # ¡Le quitamos el "async"! Ahora es una función normal
-        def crear_nuevo_producto(data: dict): 
-            print("3. Intentando crear en API:", data) # Esto saldrá en tu terminal
-            try:
-                create_product(data)
-                print("4. ¡Producto guardado con éxito en BD!") # Esto saldrá en tu terminal
-                show_snackbar(page, "Éxito", "Producto creado.", bgcolor=Colors.SUCCESS)
-                close() 
-            except ApiError as ex:
-                print("Error de API:", ex)
-                show_popup(page, "Error", api_error_to_text(ex))
-            except Exception as ex:
-                print("Error General:", ex)
-                show_snackbar(page, "Error", str(ex), bgcolor=Colors.DANGER)
-
-        dlg, open_, close = formulario_nuevo_editar_producto(page, on_submit=crear_nuevo_producto, initial=None)
-        open_()
-    ############# FIN nuevo producto #############
-    ############# FIN nuevo producto #############
-    btn_nuevo = ft.Button("Nuevo producto", icon=ft.Icons.ADD, on_click=inicio_nuevo_producto)
-    
-    rows_data: list[dict[str, Any]]=[]
-    total_items=0
     total_text = ft.Text("Total de productos: (cargando...)", style=Textos_estilos.H4)
-    #Encabezados
-    columnas=[
+    
+    columnas = [
         ft.DataColumn(label=ft.Text("Nombre", style=Textos_estilos.H4)),
         ft.DataColumn(label=ft.Text("Cantidad", style=Textos_estilos.H4)),
         ft.DataColumn(label=ft.Text("Ingreso", style=Textos_estilos.H4)),
         ft.DataColumn(label=ft.Text("Min", style=Textos_estilos.H4)),
         ft.DataColumn(label=ft.Text("Max", style=Textos_estilos.H4)),
+        ft.DataColumn(label=ft.Text("Acciones", style=Textos_estilos.H4)), 
     ]
 
-    #Se definen las filas de la tabla
-    #Cada data.append agrega
-    # Se define la lista de datos vacía
-    data = []
-    try:
-        # Mandamos a llamar a tu API
-        respuesta_api = list_products()
-        
-        # Extraemos la lista de productos que viene guardada dentro de 'items'
-        productos_reales = respuesta_api.get("items", [])
-        
-        # Actualizamos el texto usando el 'total' que ya te manda tu API
-        total_text.value = f"Total de productos: {respuesta_api.get('total', 0)}"
-
-        # Hacemos el ciclo ahora sí sobre los productos reales
-        for prod in productos_reales:
-            data.append(
-                ft.DataRow(
-                    cells=[
-                        ft.DataCell(ft.Text(str(prod.get("name", "")), style=Textos_estilos.text)),
-                        ft.DataCell(ft.Text(str(prod.get("quantity", "")), style=Textos_estilos.text)),
-                        ft.DataCell(ft.Text(str(prod.get("ingreso_date", "")), style=Textos_estilos.text)),
-                        ft.DataCell(ft.Text(str(prod.get("min_stock", "")), style=Textos_estilos.text)),
-                        ft.DataCell(ft.Text(str(prod.get("max_stock", "")), style=Textos_estilos.text)),
-                    ]
-                )
-            )
-                
-    except Exception as e:
-        total_text.value = f"Error al cargar productos: {e}"
-
-
-
-
-    #Se crea la tabla con los encabezados(columnas) y los datos de prueba(data)
-    tabla=ft.DataTable(
+    # Preparamos la tabla vacía
+    tabla = ft.DataTable(
         columns=columnas,
-        rows=data,
+        rows=[],
         width=900,
         heading_row_height=60,
         heading_row_color=Colors.BG,
@@ -91,31 +31,103 @@ def products_view(page:ft.Page) -> ft.Control:
         data_row_min_height=48
     )
 
-    # return tabla
 
-    # Regresa la tabla con los datos
-    # return tabla
+    def actualizar_data(is_init: bool = False):
+        try:
+            respuesta_api = list_products(limit=100)
+            productos_reales = respuesta_api.get("items", [])
+            total_text.value = f"Total de productos: {respuesta_api.get('total', 0)}"
+            
+            nuevas_filas = []
+            # Agregamos las filas nuevas
+            for prod in productos_reales:
+                nuevas_filas.append(
+                    ft.DataRow(
+                        cells=[
+                            ft.DataCell(ft.Text(str(prod.get("name", "")), style=Textos_estilos.text)),
+                            ft.DataCell(ft.Text(str(prod.get("quantity", "")), style=Textos_estilos.text)),
+                            ft.DataCell(ft.Text(str(prod.get("ingreso_date", "")), style=Textos_estilos.text)),
+                            ft.DataCell(ft.Text(str(prod.get("min_stock", "")), style=Textos_estilos.text)),
+                            ft.DataCell(ft.Text(str(prod.get("max_stock", "")), style=Textos_estilos.text)),
+                            ft.DataCell(
+                                ft.Row(
+                                    controls=[
+                                        ft.IconButton(icon=ft.Icons.EDIT, tooltip="Editar", on_click=lambda e, p=prod: inicio_editar_producto(p)),
+                                        # ft.IconButton(icon=ft.Icons.DELETE, tooltip="Borrar", on_click=lambda e, p=prod: inicio_borrar_producto(p))
+                                    ]
+                                )
+                            )
+                        ]
+                    )
+                )
+            
+            tabla.rows = nuevas_filas
+            
+            # Solo forzar repintado si no es la carga inicial
+            if not is_init:
+                if getattr(tabla, "page", None):
+                    tabla.update()
+                if getattr(total_text, "page", None):
+                    total_text.update()
+                
+                # Prevenir error si la página ya cerró o aún no está montada
+                if page:
+                    page.update()
 
-    # Se prepara un sistema de columnas para mostrar tanto el total de registros y
-    # la tabla y con un mejor formato
-    # Cuando se necesita el scroll también se muestra
+        except Exception as e:
+            print(f"Error al actualizar la tabla: {e}")
+
+   
+    def inicio_nuevo_producto(_e):
+        def crear_nuevo_producto(data: dict): 
+            try:
+                print(f"Llamando create_product con api: {data}")
+                create_product(data)
+                show_snackbar(page, "Éxito", "Producto creado.", bgcolor=Colors.SUCCESS)
+                close() 
+                actualizar_data() # Recarga la tabla automáticamente
+            except ApiError as ex:
+                print("ApiError en create_product:", repr(ex))
+                show_popup(page, "Error", api_error_to_text(ex))
+            except Exception as ex:
+                print("Exception en create_product:", repr(ex))
+                show_snackbar(page, "Error", str(ex), bgcolor=Colors.DANGER)
+
+        dlg, open_, close = formulario_nuevo_editar_producto(page, on_submit=crear_nuevo_producto, initial=None)
+        open_()
+
+ 
+    def inicio_editar_producto(p: dict[str, Any]):
+        def editar_producto(data: dict):
+            try:
+                print(f"Llamando update_product con api para ID {p.get('id')}: {data}")
+                update_product(p["id"], data)
+                show_snackbar(page, "Éxito", "Producto actualizado.", bgcolor=Colors.SUCCESS)
+                close()
+                actualizar_data() # Recarga la tabla automáticamente
+            except ApiError as ex:
+                print("ApiError en update_product:", repr(ex))
+                show_popup(page, "Error", api_error_to_text(ex))
+            except Exception as ex:
+                print("Exception en update_product:", repr(ex))
+                show_snackbar(page, "Error", str(ex), bgcolor=Colors.DANGER)
+
+        dlg, open_, close = formulario_nuevo_editar_producto(page, on_submit=editar_producto, initial=p)
+        open_()
+
+    btn_nuevo = ft.Button("Nuevo producto", icon=ft.Icons.ADD, on_click=inicio_nuevo_producto)
+    
+    # Llenamos la tabla por primera vez al abrir la aplicación indicando que es inicio
+    actualizar_data(is_init=True)
+
+    # Ensamblamos la pantalla
     contenido = ft.Column(
-        # Se crea un espacio entra cada elemento
         spacing=30,
-        # Cuando no caben los elementos se genera el scroll
         scroll=ft.ScrollMode.AUTO,
-        # Se establecen tanto el total como la tabla para mostrar
         controls=[btn_nuevo, total_text, ft.Container(content=tabla)]
     )
 
-    # Se muestra esa columna
-    # return contenido
-    # Se crea una tarjeta con formato para mostrar a la columna
     tarjeta = ft.Container(content=contenido, **Card.tarjeta)
-    
-    # return tarjeta
-
-    # Se crea un contenedor para centrar a la tarjeta anterior
     final = ft.Container(expand=True, alignment=ft.Alignment(0, -1), content=tarjeta)
     
     return final

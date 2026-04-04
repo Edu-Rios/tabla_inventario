@@ -18,15 +18,28 @@ class ApiError(Exception):
 def api_error_to_text(ex: ApiError) -> str:
     """
     Convierte ApiError a un texto amigable para UI (SnackBar/Toast/Dialog).
-    Soporta payloads tipo:
-      - {"error": "...", "detalles": [...]}
-      - {"detail": "..."}
-      - {"error": "..."}
     """
     payload = getattr(ex, "payload", None) or {}
+    
+    # Manejar caso donde el message recibió un string tipo lista (FastAPI error)
+    import ast
+    ex_msg = str(ex)
+    if ex_msg.startswith("[{") or ex_msg.startswith("{"):
+        try:
+            parsed = ast.literal_eval(ex_msg)
+            if isinstance(parsed, list):
+                return "\n".join([str(d.get("msg", str(d))) for d in parsed if isinstance(d, dict)])
+            elif isinstance(parsed, dict):
+                if "detalles" in parsed:
+                    det = parsed["detalles"]
+                    return "\n".join(str(x) for x in det) if isinstance(det, list) else str(det)
+                if "detail" in parsed:
+                    return str(parsed["detail"])
+        except Exception:
+            pass
 
     if isinstance(payload, dict):
-        detalles = payload.get("detalles")
+        detalles = getattr(payload, "get", lambda x: None)("detalles")
         if isinstance(detalles, list) and detalles:
             return "\n".join(str(x) for x in detalles)
 
@@ -35,4 +48,6 @@ def api_error_to_text(ex: ApiError) -> str:
         if "error" in payload:
             return str(payload["error"])
 
-    return str(ex)
+    # Fallback si el payload está vacío
+    ex_str = str(ex).replace("ApiError(", "").strip(")'\"")
+    return ex_str

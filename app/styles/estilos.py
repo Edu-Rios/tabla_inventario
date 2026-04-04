@@ -6,7 +6,7 @@ class Colors:
     BORDER = "#26378E"
     TEXT = "#575758"
     PRIMARY = "#334ACA"
-    SUCCESS = "047B08"
+    SUCCESS = "#047B08"
     INFO = "#04B4FA"
     DANGER = "#FF0000"
     WHITE = "#FFFFFF"
